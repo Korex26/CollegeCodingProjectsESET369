@@ -1,0 +1,17 @@
+#ESET 369 Lab 8
+#Brink van Eeden and Kyle Rex
+
+from machine import Pin
+from utime import sleep
+
+led1=Pin(14,Pin.OUT)
+led2=Pin(15,Pin.OUT)
+
+while True
+    led1.value(0)
+    led2.value(1)
+    sleep(0.5)
+    led1.value(1)
+    led2.value(0)
+    sleep(0.5)
+

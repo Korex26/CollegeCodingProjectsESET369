@@ -1,0 +1,54 @@
+from sense_emu import SenseHat
+import time
+
+sense = SenseHat()
+
+RED = (255, 0, 0)
+CYAN = (0, 255, 255)
+YELLOW = (255, 255, 0)
+BLACK = (0, 0, 0)
+
+cyan_x, cyan_y = 0, 0
+red_x, red_y = 4, 4
+
+def draw_initial():
+    sense.clear()
+    sense.set_pixel(cyan_x, cyan_y, CYAN)
+    sense.set_pixel(red_x, red_y, RED)
+
+def draw_yellow_hash():
+    sense.clear()
+    for i in range(8):
+        #sense.set_pixel(3, i, YELLOW)
+        #sense.set_pixel(4, i, YELLOW)
+        #sense.set_pixel(i, 3, YELLOW)
+        #sense.set_pixel(i, 4, YELLOW)
+        sense.show_letter("#", YELLOW)
+
+draw_initial()
+
+while True:
+    for event in sense.stick.get_events():
+        if event.action == 'pressed':
+            #sense.set_pixel(cyan_x, cyan_y, BLACK)
+           
+            if event.direction == 'up' and cyan_y > 0:
+                cyan_y -= 1
+            elif event.direction == 'down' and cyan_y < 7:
+                cyan_y += 1
+            elif event.direction == 'left' and cyan_x > 0:
+                cyan_x -= 1
+            elif event.direction == 'right' and cyan_x < 7:
+                cyan_x += 1
+            elif event.direction == 'middle':
+                cyan_x, cyan_y = 0, 0
+                draw_initial()
+                continue
+           
+            if cyan_x == red_x and cyan_y == red_y:
+                draw_yellow_hash()
+            else:
+                sense.set_pixel(cyan_x, cyan_y, CYAN)
+                sense.set_pixel(red_x, red_y, RED)
+   
+    time.sleep(0.1)
