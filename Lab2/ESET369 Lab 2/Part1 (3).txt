@@ -1,0 +1,30 @@
+;-------------------------------------------------------------------------------
+; Main loop here
+;-------------------------------------------------------------------------------
+;System A
+mov.w #14, R11
+add.w #32, R11 ;R11 <- 14+32
+
+mov.w #14, R13
+sub.w #32, R13 ;R12 <- 32-14
+
+mov.w #32, R12
+sub.w #14, R12 ;R13 <- 14-32
+
+;Start of summation assignment
+mov.w #2, R4 ;R4 holds K, starting at 2
+mov.w #0, R14 ;R14 holds the sum value
+mov.w #22, R5 ;loop end value
+
+loopStart:
+mov.w R4, R6 ;using R6 to do calculations, K is moved to R6
+add.w R6, R6 ;add R6 to R6 to get 2k
+add.w #1, R6 ;add one to get 2k+1
+
+add.w R6, R14 ;add the result to R14(total sum)
+
+add.w #1, R4 ; increment K
+cmp.w R5, R4 ;check if K is equal to #21
+jl loopStart ;loop as long as K than or equal to 21
+
+;end of summation assignment
