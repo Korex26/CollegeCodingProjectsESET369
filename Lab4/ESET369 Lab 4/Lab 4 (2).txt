@@ -1,0 +1,156 @@
+#include <msp430.h> 
+
+
+/**
+ * Brink van Eeden
+ *
+ */
+
+int main(void)
+{
+	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
+	PM5CTL0 &= ~LOCKLPM5;        // clear locklpm5 bit
+
+//	//Part A   -----
+//
+//	P6DIR |= BIT0;              // set the output direction of P6.0 as an output
+//	TA1CCR0 = 667;             //set the timer a ccr0 value (1 MHz / 2*(750 Hz) = 667)
+//	TA1CTL = TASSEL_2 | MC_1 | TACLR;       //TA1CTL Setup
+//
+//	while(1){
+//	    if((TA1CCTL0 & CCIFG) != 0){        //Checks whether the CCIFG flag is set to set the TAIFG
+//	        P6OUT ^= BIT0;       //toggle pin 6.00
+//	        TA1CCTL0 &= ~CCIFG; //clear the CCIFG flag
+//	    }
+//	}
+
+	//Part B   -----
+
+	TA1CTL = TASSEL_2 | MC_1 | TACLR;
+	TA1CCTL0 = CCIE;
+	__enable_interrupt();
+
+	P6DIR |= BIT0;              // output for P6.0 -- Buzzer
+    P8DIR |= 0xFF;              // Output for 8.0, 8.1, 8.2, -- LEDS
+    P8OUT = 0XFF;               // SET IT TO HIGH (OFF INITIALLY)
+
+    P7DIR |= 0X03; //OUTPUT 7.0, 7.1 -- CONTROLS THE ROWS
+    P7DIR = 0XFF;
+
+    P3DIR &= ~0x0F; // Input for 3.0-3.3 -- COLUMNS
+    P3REN |= 0x0F;  // Pullup/Pulldown enabled for 3.0
+    P3OUT |= 0x0F;  // Set 3.0 as pullup
+
+    while(1){
+
+        P7OUT = 0X02; //CHECK ROW 1
+        if((P3IN & 0X01) == 0){//BUTTON ONE
+            TA1CCR0 = 956;
+             __delay_cycles(250000);
+            TA1CCR0 = 0;
+        }
+        else if((P3IN & 0X02)==0){//BUTTON 2
+            TA1CCR0 = 851;
+            __delay_cycles(250000);
+            TA1CCR0 = 0;
+        }
+        else if((P3IN & 0X04)==0){
+            TA1CCR0 = 758;
+            __delay_cycles(250000);
+            TA1CCR0 = 0;
+        }
+        else if((P3IN & 0X08)==0){
+            TA1CCR0 = 716;
+            __delay_cycles(250000);
+            TA1CCR0 = 0;
+        }
+
+
+        P8OUT |= 0X0F;   //TURN OFF ALL LEDS CONTROLLED BY P8
+        P7OUT = 0X01;//CHECK ROW 2
+        if((P3IN & 0X01) == 0){//BUTTON ONE
+            P8OUT &= ~0X03;//LED 1 ON
+         }
+         else if((P3IN & 0X02)==0){//BUTTON 2
+            P8OUT &= ~0X05;//LED 2 ON
+         }
+         else if((P3IN & 0X04)==0){
+            P8OUT &= ~0X06;
+         }
+         else if((P3IN & 0X08)==0){
+             TA1CCR0 = 851;
+             __delay_cycles(125000*2);
+             TA1CCR0 = 676;
+             __delay_cycles(125000*2);
+
+             TA1CCR0 = 451;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 506;
+             __delay_cycles(250000);
+             TA1CCR0 = 676;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 751;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 451;
+             __delay_cycles(250000*3);
+             TA1CCR0 = 506;
+             __delay_cycles(250000);
+             TA1CCR0 = 676;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 851;
+             __delay_cycles(250000*3);
+             TA1CCR0 = 568;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 638;
+             __delay_cycles(250000*1);
+             TA1CCR0 = 851;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 1012;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 568;
+             __delay_cycles(250000*3);
+             TA1CCR0 = 638;
+             __delay_cycles(250000);
+             TA1CCR0 = 851;
+             __delay_cycles(250000*5);
+             TA1CCR0 = 638;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 676;
+             __delay_cycles(250000);
+             TA1CCR0 = 851;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 1012;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 1276;
+             __delay_cycles(250000*8);
+             TA1CCR0 = 1136;
+             __delay_cycles(250000*1);
+             TA1CCR0 = 1351;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 1276;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 1136;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 1012;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 902;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 851;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 758;
+             __delay_cycles(250000*2);
+             TA1CCR0 = 676;
+             __delay_cycles(250000*2);
+
+
+             TA1CCR0 = 0;
+         }
+
+    }
+	return 0;
+}
+
+#pragma vector = TIMER1_A0_VECTOR
+__interrupt void Timer1_A0_ISR(void){
+    P6OUT ^= BIT0;
+}
