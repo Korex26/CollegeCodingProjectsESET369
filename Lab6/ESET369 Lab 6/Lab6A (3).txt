@@ -1,0 +1,107 @@
+#include <msp430.h>
+
+void LCD_command(unsigned char);
+void LCD_write(unsigned char);
+void LCD_init(void);
+void display_voltage(int, int, int, int, int, int);
+
+unsigned int adc_raw[3];
+
+void main(void) {
+    WDTCTL = WDTPW | WDTHOLD;    // Stop watchdog timer
+    PM5CTL0 &= ~LOCKLPM5;        // Enable GPIO
+
+    // Configure ADC
+    ADC12CTL0 = ADC12SHT0_6 | ADC12MSC | ADC12ON;
+    ADC12CTL1 = ADC12SHP | ADC12CONSEQ_1;
+    ADC12CTL2 = ADC12RES_2;
+    ADC12MCTL0 = ADC12INCH_9;
+    ADC12MCTL1 = ADC12INCH_10;
+    ADC12MCTL2 = ADC12INCH_11 | ADC12EOS;
+
+    // Configure LCD pins
+    P3DIR |= 0xFF;
+    P3OUT &= ~0xFF;
+    P8DIR |= 0x0E;
+    P8OUT |= 0x0E;
+
+    LCD_init();
+
+    while (1) {
+        ADC12CTL0 |= ADC12ENC | ADC12SC; // Start conversion
+        while ((ADC12IFGR0 & BIT2) == 0);
+
+        adc_raw[0] = ADC12MEM0;
+        adc_raw[1] = ADC12MEM1;
+        adc_raw[2] = ADC12MEM2;
+
+        int v_int[3], v_dec[3];
+        int i;
+        for (i = 0; i < 3; i++) {
+            float voltage = (adc_raw[i] / 4095.0) * 3.3;
+            v_int[i] = (int)voltage;
+            v_dec[i] = (int)((voltage - v_int[i]) * 100);
+        }
+
+        display_voltage(v_int[0], v_dec[0], v_int[1], v_dec[1], v_int[2], v_dec[2]);
+
+        __delay_cycles(500000);
+    }
+}
+
+void display_voltage(int x_int, int x_dec, int y_int, int y_dec, int r_int, int r_dec) {
+    LCD_command(0x01); // Clear display
+    __delay_cycles(3000);
+    LCD_command(0x80); // Set cursor to first line
+
+    LCD_write('X'); LCD_write(':');
+    LCD_write('0' + x_int); LCD_write('.');
+    LCD_write('0' + (x_dec / 10)); LCD_write('0' + (x_dec % 10));
+    LCD_write(' ');
+
+    LCD_write('Y'); LCD_write(':');
+    LCD_write('0' + y_int); LCD_write('.');
+    LCD_write('0' + (y_dec / 10)); LCD_write('0' + (y_dec % 10));
+
+    LCD_command(0xC0); // Move to second line
+    LCD_write('R'); LCD_write(':');
+    LCD_write('0' + r_int); LCD_write('.');
+    LCD_write('0' + (r_dec / 10)); LCD_write('0' + (r_dec % 10));
+}
+
+void LCD_command(unsigned char in) {
+    P3OUT = in;
+    P8OUT &= ~BIT3;
+    P8OUT &= ~BIT2;
+    P8OUT |= BIT1;
+    __delay_cycles(200);
+    P8OUT &= ~BIT1;
+}
+
+void LCD_write(unsigned char in) {
+    P3OUT = in;
+    P8OUT |= BIT3;
+    P8OUT &= ~BIT2;
+    P8OUT |= BIT1;
+    __delay_cycles(200);
+    P8OUT &= ~BIT1;
+}
+
+void LCD_init() {
+    P8OUT &= ~BIT1;
+    __delay_cycles(15000);
+    LCD_command(0x30);
+    __delay_cycles(300);
+    LCD_command(0x30);
+    __delay_cycles(300);
+    LCD_command(0x30);
+    __delay_cycles(300);
+    LCD_command(0x38);
+    LCD_command(0x10);
+    LCD_command(0x0F);
+    LCD_command(0x06);
+    LCD_command(0x01);
+    __delay_cycles(3000);
+}
+
+
